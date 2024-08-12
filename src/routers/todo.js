@@ -11,6 +11,32 @@ dayjs.extend(utc);
 const router = express.Router();
 
 export default ({todoRepository}) => {
+    // List User's Todo
+    router.get('/', auth, async (req, res) => {
+        try {
+            const { userID } = verifyToken(req.cookies['todox-session']);
+            const results = await todoRepository.findByUserID(userID)
+            res.status(200).send(results)
+        } catch (error) {
+            console.error(err)
+            res.status(500).send({error: "Something went wrong."})
+        }
+    })
+
+    // toggle status of a TODO
+    router.put('/toggle-status', auth, async(req, res) => {
+        const { userID } = verifyToken(req.cookies['todox-session']);
+        const { todoID } = req.body
+
+        const result = await todoRepository.toggleStatus({ userID, todoID });
+                
+        if (!result) {
+            return res.status(400).send({error: "An error occurred while updating the status."});
+        }
+
+        return res.status(200).send(result)
+    })
+
     // Create new todo
     router.post('/', auth, async (req, res) => {
         try {
